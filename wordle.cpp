@@ -24,58 +24,47 @@ std::set<std::string> wordle(
     set<string> results;
     int n = in.size();
 
-    //counting how many of each floating letter i have to place
+    //count how many of each floating letter we need
     map<char,int> need;
-    for (char c : floating) {
-      if (c >= 'a' && c <= 'z'){
-        need[c]++;
-      }
+    for (char c : floating){
+        if (c >= 'a' && c <= 'z')
+            need[c]++;
     }
 
-    //scans each candidate in the dict once
-    for (const auto& w : dict) {
-      //must be the right length
+    //for each dict word
+    for (const auto& w : dict){
       if ((int)w.size() != n){
         continue;
       }
         
 
-      //skip any word with nonlowercase letters
-      bool pure = true;
-      for (char c : w) {
-        if (c < 'a' || c > 'z') {
-          pure = false;
-          break;
-        }
-      }
-      if (!pure){
-        continue;
-      }
-
-      //enforce the fixed (green) letters
+      map<char,int> have;
       bool ok = true;
-      for (int i = 0; i < n; ++i) {
-        if (in[i] != '-' && w[i] != in[i]) {
+
+      //check purity greens, and tally in one pass
+      for (int i = 0; i < n; ++i){
+        char c = w[i];
+        //reject non-lowercase
+        if (c < 'a' || c > 'z'){
           ok = false;
           break;
         }
-      }
-      if (!ok){
-        continue;
-      }
-
-      //count up this words letters
-      map<char,int> have;
-      for (char c : w){
+        //reject green slot mismatch
+        if (in[i] != '-' && in[i] != c){
+          ok = false;
+          break;
+        }
+        //tally letter counts
         have[c]++;
       }
-          
+      if (!ok){
+        continue;
+      }
+      
 
-      //enforce that each floating letter appears at least as many times as needed
-      for (auto& p : need) {
-        char c = p.first;
-        int want = p.second;
-        if (have[c] < want) {
+      //enforce floating letters at least count
+      for (auto& p : need){
+        if (have[p.first] < p.second) {
           ok = false;
           break;
         }
@@ -83,14 +72,11 @@ std::set<std::string> wordle(
       if (!ok){
         continue;
       }
-          
 
-      // passed all checks
       results.insert(w);
     }
 
     return results;
-
   
 }
 
