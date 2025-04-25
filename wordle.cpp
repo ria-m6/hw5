@@ -24,17 +24,35 @@ std::set<std::string> wordle(
     set<string> results;
     int n = in.size();
 
-    //count how many of each letter we must still place 
-    int need[26] = {0};
+    //counting how many of each floating letter i have to place
+    map<char,int> need;
     for (char c : floating) {
-      need[c - 'a']++;
+      if (c >= 'a' && c <= 'z'){
+        need[c]++;
+      }
     }
 
-    //scanning every dictionary word once
-    for (const string& w : dict) {
-      if ((int)w.size() != n) continue;  // wrong length
+    //scans each candidate in the dict once
+    for (const auto& w : dict) {
+      //must be the right length
+      if ((int)w.size() != n){
+        continue;
+      }
+        
 
-      //check fixed (green) letters
+      //skip any word with nonlowercase letters
+      bool pure = true;
+      for (char c : w) {
+        if (c < 'a' || c > 'z') {
+          pure = false;
+          break;
+        }
+      }
+      if (!pure){
+        continue;
+      }
+
+      //enforce the fixed (green) letters
       bool ok = true;
       for (int i = 0; i < n; ++i) {
         if (in[i] != '-' && w[i] != in[i]) {
@@ -42,30 +60,37 @@ std::set<std::string> wordle(
           break;
         }
       }
-      if (!ok) continue;
-
-      //count up letters in this candidate
-      int have[26] = {0};
-      for (char c : w) {
-        have[c - 'a']++;
+      if (!ok){
+        continue;
       }
 
-      //ensure we meet the floating requirements
-      for (int i = 0; i < 26; ++i) {
-        if (have[i] < need[i]) {
+      //count up this words letters
+      map<char,int> have;
+      for (char c : w){
+        have[c]++;
+      }
+          
+
+      //enforce that each floating letter appears at least as many times as needed
+      for (auto& p : need) {
+        char c = p.first;
+        int want = p.second;
+        if (have[c] < want) {
           ok = false;
           break;
         }
       }
       if (!ok){
         continue;
-      } 
+      }
+          
 
-      //if we reach here then w matches both fixed and floating constraints
+      // passed all checks
       results.insert(w);
     }
 
     return results;
+
   
 }
 
